@@ -9,4 +9,20 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Build and Run Go Program"
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: SSH
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          mkdir -p /home/runner/.ssh
+          ssh-keyscan $SSH_HOST >> /home/runner/.ssh/known_hosts
+          echo "$SSH_PRIVATE_KEY" > /home/runner/.ssh/github_actions
+          chmod 600 /home/runner/.ssh/github_actions
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null	
+          ssh-add /home/runner/.ssh/github_actions
+          ssh $SSH_USERNAME@$SSH_HOST "echo 'Hello from GitHub Actions'"
