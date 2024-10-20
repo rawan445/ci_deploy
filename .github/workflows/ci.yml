@@ -1,0 +1,12 @@
+name: Readme Checker
+
+on:
+  push:
+     branches:
+        - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Build and Run Go Program"
