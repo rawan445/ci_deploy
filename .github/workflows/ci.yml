@@ -6,17 +6,21 @@ on:
       - master
 
 jobs:
-  test:
+  build:
     runs-on: self-hosted
     steps:
-      - name: Deploy to server 2
+      - name: Deploy to server2
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-          SERVER_2_HOST: ${{ secrets.SERVER_2_HOST }}
+          SERVER_2_HOSTS: ${{ secrets.SERVER_2_HOSTS }}
         run: |
-            ssh-keyscan $SERVER_2_HOST >> ~/.ssh/known_hosts
             echo "$SSH_PRIVATE_KEY" > ~/.ssh/github_actions
             chmod 600 ~/.ssh/github_actions
-            ssh -i ~/.ssh/github_actions $SSH_USERNAME@$SERVER_2_HOST "cd /docker-compose-flask-app && git pull && docker compose up -d --build"
+            for HOST in $SERVER_2_HOSTS; do
+              echo "Adding $HOST to known_hosts..."
+              ssh-keyscan $HOST >> ~/.ssh/known_hosts
+              echo "Deploying to $HOST..."
+              ssh -i ~/.ssh/github_actions $SSH_USERNAME@$HOST "cd /docker-compose-flask-app && git pull && docker compose up -d --build"
+             done
